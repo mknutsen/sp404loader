@@ -97,7 +97,6 @@ def gen_attribute_dict(attribute: str):
         return_dict[attribute_value] = list_of_attribute
     return return_dict
 
-suf_sample = Sample(file_path="/Volumes/Hi/Dropbox/ableton_workspace/sample/000.wav", instrument_name="sufjan", note="", length=1,strength=1, intonation=None)
 
 with ZipFile(template_path,"r") as zip_ref, TemporaryDirectory() as temp_dir:
     # get the sd card back to template status
@@ -121,8 +120,6 @@ attribute_dict = gen_attribute_dict(option)
 
 def select_samples():
     # sp404 has 120 sample slots
-    print(f"abc123 suf suf {suf_sample.file_name}")
-    yield suf_sample
     for _ in range(0, 119):
         eligable_attribute_list = []
         while len(eligable_attribute_list) == 0:
