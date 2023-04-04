@@ -7,7 +7,18 @@ import shutil
 from tempfile import TemporaryDirectory
 import tempfile
 import urllib.request
+import argparse
+
+parser = argparse.ArgumentParser(
+                    prog='ProgramName',
+                    description='What the program does',
+                    epilog='Text at the bottom of help')
+parser.add_argument('--directory', required=False)
+args = parser.parse_args()
 instrument_sample_dir = "/Volumes/ssd/test"
+if args.directory:
+    instrument_sample_dir = args.directory    
+
 # https://github.com/mknutsen/sp404loader/releases/download/main/sp_template.zip
 template_path = None
 sd_card_path = "/Volumes/SP-404SX/"
