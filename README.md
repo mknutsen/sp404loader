@@ -11,6 +11,6 @@ Takes a directory. Each subdirectory of that will be considered a category. 120 
 
 ## TL;DR
 ```
-python3 -m pip install requirnments.txt
+python3 -m pip install requirements.txt
 python3 main.py --directory {{directory of your samples}}
 ```
