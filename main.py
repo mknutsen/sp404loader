@@ -5,8 +5,11 @@ from random import choices, choice
 from zipfile import ZipFile
 import shutil
 from tempfile import TemporaryDirectory
+import tempfile
+import urllib.request
 instrument_sample_dir = "/Volumes/ssd/test"
-template_path = f"/Users/mknutsen/Library/Mobile Documents/com~apple~CloudDocs/max/sp_template.zip" # https://github.com/mknutsen/mknutsen.github.io/releases/download/main/sp_template.zip
+# https://github.com/mknutsen/sp404loader/releases/download/main/sp_template.zip
+template_path = None
 sd_card_path = "/Volumes/SP-404SX/"
 sd_card_sample_destination = "/Volumes/SP-404SX/ROLAND/IMPORT"
 
@@ -32,12 +35,20 @@ def remove_leading_trailing_silence(sound):
     # removing trailing silence bad? 
     return sound[start_trim:]
 
-
 # unpack the template
+if template_path is None:
+    print("fetching SP404 template zip")
+    new_path = TemporaryDirectory()
+    template_path = os.path.join(str(new_path.name), "sp_template.zip")
+    urllib.request.urlretrieve("https://github.com/mknutsen/sp404loader/releases/download/main/sp_template.zip", template_path)
+        
 with ZipFile(template_path,"r") as zip_ref, TemporaryDirectory() as temp_dir:
+    
+    print("Clearing SD Card")
     # get the sd card back to template status
     os.system(f"rm -r {sd_card_path}/*")
     
+    print("Extracting zip template")
     zip_ref.extractall(temp_dir)
 
     for dirname in ["ROLAND", "BKUP"]:
