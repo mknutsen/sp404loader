@@ -28,5 +28,5 @@ When they are loaded on the SD card they will be loaded in alphabetical order of
 
 It should accept any audio file type and convert it to .wav as well as remove the leading silence.
 
-[If you want the blank sp404 template for some reason here it is](
-sp 404 template folder here: https://github.com/mknutsen/sp404loader/releases/download/main/sp_template.zip) this will download it for you though if you run it
+
+sp 404 template folder here: https://github.com/mknutsen/sp404loader/releases/download/main/sp_template.zip
