@@ -1,8 +1,6 @@
 # sp404loader
 formats a sd card and loads it with samples
 
-sp 404 template folder here: https://github.com/mknutsen/sp404loader/releases/download/main/sp_template.zip
-
 assembles a memory card for the Roland SP404-SX/AThe samples are also trimmed and formatted to wav
 
 The SD card is erased and the template is replaced. When booting the sp 404 hit import all and it will auto load the samples into the banks.
@@ -29,3 +27,6 @@ The contents of each top level directory (eg `01 kicks`) will have all its files
 When they are loaded on the SD card they will be loaded in alphabetical order of the file path, which means samples in the same folder will be next to eachother.
 
 It should accept any audio file type and convert it to .wav as well as remove the leading silence.
+
+[If you want the blank sp404 template for some reason here it is](
+sp 404 template folder here: https://github.com/mknutsen/sp404loader/releases/download/main/sp_template.zip) this will download it for you though if you run it
