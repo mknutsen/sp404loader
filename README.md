@@ -20,7 +20,7 @@ These are the sub directories I have. It doesn't matter what they're called but 
 01 kicks          04 percs & fx     07 vox & adlibs
 02 snares         05 loops & breaks 08 foley
 ```
-`120 / 9 = 13.3` - each folder will have `13 samples` selected in this case. The leftover slots will be filled in at random.
+`120 / 10 = 12` - each folder will have `12 samples` selected in this case. The leftover slots, should they exist, will be filled in at random.
 
 The contents of each top level directory (eg `01 kicks`) will have all its files including subdirectories all included.
 
