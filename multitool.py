@@ -1,47 +1,118 @@
-import os
+import logging
 
+import humanize as humanize
+import librosa as librosa
+from humanize import naturalsize
 from moviepy.editor import AudioFileClip
 
+import subprocess
+import os
+from tqdm import tqdm
 dest_dir = "/Volumes/CRAIG/öäå/AUDIO"
 source_dir = "/Volumes/Hi/Dropbox/ableton_workspace/sample"
 file_paths = [
-    # "JAKE REED SUPER NATURAL DRUMS SAMPLE PACK",
-    # "JAKE REED SUPER DEAD DRUMS SAMPLE PACK 48/24",
-    # "Jersey Club Vox",
-    # "kenny rewards",
-    # "Jungle Jungle - 1989 to 1999 Samplepack",
-    # "Dreamland drum kit [by San]",
-    # "MED 2021 SAMPLES",
-    # "montesounds3",
-    # "Mojo Pianos",
-    # "Zero-G Jungle Warfare Complete"
-    # # "monte sorted",
-    # "soul acappelas",
-    # "LSD Vocal Samples",
-    # "BB - Brushed Drum Sample Pack",
-    # "bo jackson acapellea",
-    # "breakcore is not a good way to get laid",
-    # "1000 gecs + TOC stems",
-    # "Night Falls Over Kortedala",
-    # "Mandalorian Sound FX",
-    # "Donkey Kong 64 (SFX Kit)"
-    "soul wav"
+    "JAKE REED SUPER DEAD DRUMS SAMPLE PACK 48/24",
+    "Jersey Club Vox",
+    "Dreamland drum kit [by San]",
+    "MED 2021 SAMPLES",
+    "montesounds3",
+    "Mojo Pianos",
+    "monte sorted",
+    "BB - Brushed Drum Sample Pack",
+    "Donkey Kong 64 (SFX Kit)"
 ]
 
-import subprocess
+dest_dir = "/Volumes/SP404MKII/IMPORT"
+logging.getLogger("ffmpeg").setLevel(logging.ERROR)
+logging.basicConfig(level=logging.WARN)
+
+def get_audio_frequency(audio_path):
+    # Load audio file
+    audio, _ = librosa.load(audio_path)
+
+    # Compute the mel-frequency cepstral coefficients (MFCCs)
+    mfcc = librosa.feature.mfcc(y=audio)
+
+    # Calculate the mean MFCC values across time
+    mean_mfcc = mfcc.mean(axis=1)
+
+    # Return the average frequency as a representative value
+    return mean_mfcc.mean()
+
+def sort_audio_files_by_frequency(file_paths):
+    sorted_files = sorted(file_paths, key=get_audio_frequency)
+
+    # Create a dictionary to store the sorted files
+    sorted_dict = {}
+
+    # Define the number of bins and generate the thresholds
+    num_bins = 8  # Adjust the number of bins as needed
+    max_frequency = max(get_audio_frequency(file_paths[-1]), 1)  # Ensure non-zero maximum frequency
+    thresholds = [max_frequency * (i+1) / num_bins for i in range(num_bins-1)]
+
+    # Define the bin names
+    bin_names = [f"bin{i+1}" for i in range(num_bins)]
+
+    # Iterate over the sorted files and group them into frequency bins
+    for file_path in sorted_files:
+        frequency = get_audio_frequency(file_path)
+
+        # Find the appropriate bin for the frequency
+        bin_index = 0
+        for threshold in thresholds:
+            if frequency < threshold:
+                break
+            bin_index += 1
+
+        # Assign the file path to the appropriate frequency bin in the dictionary
+        bin_name = bin_names[bin_index]
+        if bin_name in sorted_dict:
+            sorted_dict[bin_name].append(file_path)
+        else:
+            sorted_dict[bin_name] = [file_path]
+
+    return sorted_dict
+def get_sd_card_size(sd_card_path):
+    if os.path.exists(sd_card_path):
+        total_size = os.statvfs(sd_card_path).f_frsize * os.statvfs(sd_card_path).f_blocks
+        total_size_gb = total_size / (1024 ** 3)  # Convert bytes to gigabytes
+        return total_size_gb
+    else:
+        return None
+
+def get_total_file_size_bytes(file_paths):
+    total_size = 0
+
+    for file_path in file_paths:
+        if os.path.isfile(file_path):
+            total_size += os.path.getsize(file_path)
+
+    return total_size
+
+def get_total_file_size_humanized(file_paths):
+    total_size = 0
+
+    for file_path in file_paths:
+        if os.path.isfile(file_path):
+            total_size += os.path.getsize(file_path)
+
+    total_size_humanized = naturalsize(total_size, binary=True)
+
+    return total_size_humanized
 
 def convert_audio_to_sp404_wav(input_file, output_file):
     ffmpeg_cmd = [
-        'ffmpeg',                     # Command
-        '-i', input_file,             # Input file
-        '-ar', '44100',               # Sample rate (44.1 kHz)
-        '-ac', '1',                   # Number of channels (mono)
-        '-acodec', 'pcm_s16le',       # Audio codec (16-bit PCM, little-endian)
-        '-f', 'wav',                  # Output format (WAV)
-        output_file                   # Output file
+        'ffmpeg',
+        '-i', input_file,
+        '-ar', '44100',
+        '-ac', '1',
+        '-acodec', 'pcm_s16le',
+        '-f', 'wav',
+        output_file
     ]
+    # Access the output of ffmpeg
+    _ = subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    subprocess.run(ffmpeg_cmd)
 
 def convert_audio_to_octatrack_wav(input_file, output_file):
     if os.path.isfile(output_file):
@@ -79,17 +150,19 @@ def gather():
             for file in [os.path.join(root, file) for file in files if real_file(os.path.join(root, file))]:
                 rel = str(file).split(source_dir)[1].strip('/')
                 dest = os.path.join(dest_dir, rel)
-                os.makedirs(os.path.dirname(dest), exist_ok=True)
                 yield file, dest
 
 
 pairs = list(gather())
-for index, (src, dest) in enumerate(pairs):
-    if index % 100 == 0:
-        print(index)
-    if convert_audio_to_octatrack_wav(src, dest):
-        print(index / len(pairs) * 100, "%   complete")
+files = [file for file, dest in pairs]
+bins = sort_audio_files_by_frequency(files)
+# print(get_total_file_size_humanized(files))
+with tqdm(total=len(files)) as progress_bar:
+    for key, file_list in bins.items():
+        dest_dir = os.path.join(dest_dir, key)
+        os.makedirs(os.path.dirname(dest_dir), exist_ok=True)
+        for src in file_list:
+            dest = os.path.join(dest_dir, os.path.basename(src))
+            convert_audio_to_sp404_wav(src, dest)
+            progress_bar.update(1)
 
-# input_file = "input.mp3"
-# output_file = "output.wav"
-#
